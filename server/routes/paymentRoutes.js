@@ -10,7 +10,7 @@ router.get('/done' , (req , res) => {
     console.log(req);
 })
 
-// sandbox
+// live nowpayment apis
 router.post('/', (req , res) => {
     console.log({ body : req.body })
     const paymentData = {
@@ -21,11 +21,11 @@ router.post('/', (req , res) => {
         "ipn_callback_url": "http://localhost:3300/api/payment/done" , 
         "order_id": req.body.packageId ,
         "order_description": req.body.pacakgeName ,
-        case: 'success'
+  //      case: 'success'
     }
-    axios.post('https://api-sandbox.nowpayments.io/v1/payment', paymentData, {
+    axios.post('https://api.nowpayments.io/v1/payment', paymentData, {
         headers: {
-            'x-api-key': '1N4KF6A-FFPMQQG-PVPN7GN-R141FQ1'
+            'x-api-key': 'RPXHWVY-MTA49ZE-JSHN3PB-4EKH2FR'
         }
     })
     .then(response => {
