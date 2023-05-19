@@ -26,7 +26,7 @@ const depositHistorySchema = new mongoose.Schema({
         type : String ,
         enum : ['update' , 'active'] ,
         default : 'active'
-    }
+    } , 
 } , { timestamps : true });
 
 

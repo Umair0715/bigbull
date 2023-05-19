@@ -78,7 +78,16 @@ const getAllNotifications = require('./utils/testPayment');
 //         console.error('Failed to retrieve notifications:', error);
 //     });
 
+app.use('/api/deposit-request' , require('./routes/depositRoutes'))
+
 app.use(require('./middlewares/errorHandler'));
+
+//const options = {
+ // key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
+ // cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
+// };
+
+// const server = https.createServer(options, app);
 
 
 
