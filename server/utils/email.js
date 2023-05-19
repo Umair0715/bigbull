@@ -8,7 +8,10 @@ const sendEmail = async (email , token , subject = 'Verify Your Email Address') 
       name : process.env.EMAIL_USERNAME ,
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
-      secure : true ,
+      secure : false ,
+      tls: {
+         rejectUnauthorized: false // Disable certificate verification
+      },
       auth: {
          user: process.env.EMAIL_USERNAME, 
          pass: process.env.EMAIL_PASSWORD,
