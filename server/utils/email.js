@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
-const url = 'http://localhost:5173/verify-email'
-// const url = 'https://bigbullworld.com/verify-email'
+// const url = 'http://localhost:5173/verify-email'
+const url = 'https://bigbullworld.com/verify-email'
 
 const sendEmail = async (email , token , subject = 'Verify Your Email Address') => {
    
