@@ -1,7 +1,10 @@
-module.exports = { apps: [ { name: 'bigbull', script: 'server/server.js', instances: 1, autorestart: true, watch: false, max_memory_restart: '1G', env: { 
-        NODE_ENV: 'production',
-      },
-      env_development: { NODE_ENV: 'development',
-      },
-    },   ],
+module.exports = { apps: [ { name: 'bigbull', script: 'server/server.js', 
+      exec_mode: 'cluster', instances: 'max', listen_timeout: 50000, 
+      wait_ready: true, env: {
+        NODE_ENV: 'production', PORT: 3300 , HTTPS: true, 
+        SSL_KEY: 'bigbullworld.key', SSL_CERT: 
+        'bigbullworld.crt'
+      }
+    }
+  ]
 };

@@ -10,17 +10,20 @@ const connectDB = require('./utils/db');
 const calculateRoiScheduler = require('./croneJobs/calculateRoiScheduler');
 const schedule = require('node-schedule');
 const sendBullTrackBonus = require('./croneJobs/sendBullTrackBonus');
+const https = require('https');
+const fs = require('fs');
 
 
-// schedule.scheduleJob('*/5 * * * * *', calculateRoiScheduler);
-// schedule.scheduleJob('0 0 5 * * *', calculateRoiScheduler);
-// schedule.scheduleJob('0 0 4 * * *', sendBullTrackBonus);
-// schedule.scheduleJob('0 0 3 * * *', profitTracker);
+const options = {
+  key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
+  cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
+};
+
+const server = https.createServer(options, app);
 
 const cron = require('node-cron');
-const profitTracker = require('./croneJobs/profitTrackerScheduler');
 const rankAchiever = require('./croneJobs/rankAchiever');
-const generateReferralCode = require('./utils/generateReferralCode');
+
 
 cron.schedule('0 6 * * 1-5', rankAchiever, {
   timezone: 'Asia/Karachi' // set the time zone explicitly
@@ -59,12 +62,10 @@ app.use('/api/deposit-history' , require('./routes/depositHistoryRoutes'));
 app.use('/api/payment' , require('./routes/paymentRoutes'));
 app.use('/api/rank' , require('./routes/rankRoutes'));
 app.use('/api/achieved-rank' , require('./routes/achievedRankRoutes'));
+
 var randomize = require('randomatic');
 const getAllNotifications = require('./utils/testPayment');
 
-// for(let i = 1 ; i < 1005 ; i++){
-//    console.log(generateReferralCode(i))
-// }
 
 // const paymentId = '5688756611'; // Replace with the actual payment ID
 // getAllNotifications(paymentId)
@@ -80,5 +81,7 @@ const getAllNotifications = require('./utils/testPayment');
 app.use(require('./middlewares/errorHandler'));
 
 
+
+
 const PORT = process.env.PORT || 3300;
-app.listen(PORT , () => console.log(`server is listening on port ${PORT}`))
+server.listen(PORT , () => console.log(`server is listening on port ${PORT}`))
