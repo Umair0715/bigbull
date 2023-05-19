@@ -15,17 +15,12 @@ const sendTeamBonus = require('../utils/sendTeamBonus');
 const Admin = require('../models/adminModel');
 const AdminWallet = require('../models/adminWalletModel');
 const AdminWalletHistory = require('../models/adminWalletHistoryModel');
-const handlerFactory = require('./factories/handlerFactory');
 const DepositHistory = require('../models/depositHistoryModel');
-const Transaction = require('../models/transactionModel')
+const Transaction = require('../models/transactionModel');
 
-exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
+
+const createSubscriptionByUsd = async (req , res , next) => {
     let { depositAmount , packageId , paymentMethod , packageFee } = req.body;
-
-    const { error } = subscriptionValidation.validate(req.body);
-    if (error) {
-        return next(new AppError(error.details[0].message , 400));
-    }
 
     depositAmount = parseInt(depositAmount);
     packageFee = parseInt(packageFee);
@@ -36,12 +31,6 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
     const admin = await Admin.findOne({ isSuperAdmin : true });
     const adminWallet = await AdminWallet.findOne({ admin : admin._id });
 
-    if(cashWallet.totalBallance < depositAmount ) {
-        return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
-    }
-    if(!package.depositRange.includes(depositAmount)) {
-        return next(new AppError('Invalid deposit amount. This amount is not present in this package deposit range.' , 400))
-    }
     const subscriptionExist = await Subscription.findOne({
         user : req.user._id ,
         expireDate : { $gt : Date.now() } ,
@@ -101,19 +90,10 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
         const daysAgo = moment().diff(moment(subscriptionExist.createdAt), 'days');
 
         let amountToDetuct = 0;
-        if(user.activePackageType === 2){
-            amountToDetuct = depositAmount;
-        }else{
-            if(daysAgo > 60) {
-                amountToDetuct = depositAmount
-            } else {
-                amountToDetuct = depositAmount - subscriptionExist.depositAmount
-            }
-        }
-
-        if(paymentMethod === 1) {
-            cashWallet.totalBallance -= (amountToDetuct + packageFee);  
-            await cashWallet.save();
+        if(daysAgo > 60) {
+            amountToDetuct = depositAmount
+        } else {
+            amountToDetuct = depositAmount - subscriptionExist.depositAmount
         }
         
         user.activePackageType = 1;
@@ -147,10 +127,7 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
             description : 'You upgraded your Package'
         })
 
-        return sendSuccessResponse(res , 200 , {
-            message : 'Package Upgraded Successfully.' ,
-            doc : updatedSubscription
-        })
+        return updatedSubscription;
     }else {
         const newSubscription = await Subscription.create({
             user : mongoose.Types.ObjectId(req.user._id),
@@ -167,22 +144,10 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
             paymentMethod
         })
 
-        Transaction.create({
-            from : mongoose.Types.ObjectId(req.user._id) , 
-            to : mongoose.Types.ObjectId(req.user._id) ,
-            amount : depositAmount + packageFee ,
-            toSelf : true , 
-            description : 'You purchased a Package'
-        })
-
         const user = await User.findById(req.user._id);
         user.activePackage = newSubscription._id;
         user.activePackageType = 1;
         await user.save();
-        if(paymentMethod === 1){
-            cashWallet.totalBallance -= (depositAmount + packageFee);
-            await cashWallet.save();
-        }
         adminWallet.totalBalance += packageFee;
         adminWallet.save();
         AdminWalletHistory.create({
@@ -278,63 +243,8 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
         }
         const newSubs = await Subscription.findById(newSubscription._id)
         .populate('package');
-        return sendSuccessResponse(res , 201 , {
-            message : 'Package Purchased successfully.' ,
-            doc : newSubs 
-        })
+        return newSubs;
     } 
-});
+}
 
-
-exports.getAllSubscriptions = handlerFactory.getAll(Subscription , 'user package')
-exports.getMySubscriptions = handlerFactory.getMy(Subscription , 'user package')
-
-exports.createSpecialPackageSubscription = catchAsync(async(req , res , next) => {
-    const { userId , packageId , depositAmount } = req.body;
-    if(!userId || !packageId || !depositAmount) {
-        return next(new AppError('All Feilds are required.' , 400))
-    }
-    const packageExist = await Package.findById(packageId);
-    const user = await User.findById(userId);
-    if(!packageExist || !user){
-        return next(new AppError('User or package not found.' , 404))
-    }
-    if(user?.activePackage && new Date(user?.activePackage?.expireDate) > new Date()){
-        return next(new AppError('This user already have active Package.' , 400))
-    }
-    const newSubscription = await Subscription.create({
-        user : mongoose.Types.ObjectId(userId),
-        package : packageExist._id ,
-        expireDate : moment().add(10 , 'year').toDate() ,
-        depositAmount ,
-        packageFee : 0 ,
-        
-    })
-    user.activePackage = newSubscription._id;
-    user.activePackageType = 2;
-    await user.save();
-    sendSuccessResponse(res , 200 , {
-        message : 'Package assigned successfully.' ,
-    })
-});
-
-exports.removeSpecialPackageFromUser = catchAsync(async(req , res , next) => {
-    const { packageId , userId } = req.body;
-    if(!userId || !packageId) { // package id means subscription id
-        return next(new AppError('missing required credentials.', 400))
-    }
-    const package = await Subscription.findById(packageId);
-    const user = await User.findOne({ _id : mongoose.Types.ObjectId(userId) , activePackageType : 2 });
-    if(!user || !package){
-        return next(new AppError('Invalid data provided.' , 400))
-    }
-    if(user.activePackage._id.toString() !== packageId.toString()) {
-        return next(new AppError('Package not matched with user active package.' , 400))
-    }
-    user.activePackage = null;
-    user.activePackageType = null;
-    await user.save();
-    sendSuccessResponse(res , 200 , {
-        message : 'Package Removed successfully.'
-    })
-})
+module.exports = createSubscriptionByUsd;

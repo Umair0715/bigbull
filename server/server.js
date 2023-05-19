@@ -14,12 +14,7 @@ const https = require('https');
 const fs = require('fs');
 
 
-const options = {
-  key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
-  cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
-};
 
-const server = https.createServer(options, app);
 
 const cron = require('node-cron');
 const rankAchiever = require('./croneJobs/rankAchiever');
@@ -62,26 +57,17 @@ app.use('/api/deposit-history' , require('./routes/depositHistoryRoutes'));
 app.use('/api/payment' , require('./routes/paymentRoutes'));
 app.use('/api/rank' , require('./routes/rankRoutes'));
 app.use('/api/achieved-rank' , require('./routes/achievedRankRoutes'));
-
-var randomize = require('randomatic');
-const getAllNotifications = require('./utils/testPayment');
-
-
-// const paymentId = '5688756611'; // Replace with the actual payment ID
-// getAllNotifications(paymentId)
-//     .then(notifications => {
-//         console.log('Notifications:', notifications);
-//         // Further processing or handling of the notifications
-//     })
-//     .catch(error => {
-//         // Handle any errors
-//         console.error('Failed to retrieve notifications:', error);
-//     });
+app.use('/api/deposit-request' , require('./routes/depositRoutes'))
 
 app.use(require('./middlewares/errorHandler'));
 
+// const options = {
+//   key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
+//   cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
+// };
 
+// const server = https.createServer(options, app);
 
 
 const PORT = process.env.PORT || 3300;
-server.listen(PORT , () => console.log(`server is listening on port ${PORT}`))
+app.listen(PORT , () => console.log(`server is listening on port ${PORT}`))
