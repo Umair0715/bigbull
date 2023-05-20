@@ -15,6 +15,7 @@ const mongoose = require('mongoose');
 const uploadImage = require('../utils/uploadImage');
 const sendEmail = require('../utils/email');
 const jwt = require('jsonwebtoken');
+const sendForgotPasswordEmail = require('../utils/forgotPasswordEmail');
 
 const signVerificationToken = (payload) => {
     return jwt.sign( payload , process.env.JWT_SECRET , {
@@ -46,7 +47,6 @@ exports.register = catchAsync(async(req , res, next) => {
     }
     const docCount = await User.countDocuments();
     const referralCode = await generateReferralCode(docCount);
-    console.log({ referralCode })
     let newUser = await User.create({
         ...req.body , 
         referralCode : 'BB-' + referralCode
@@ -91,7 +91,8 @@ exports.resendVerificationEmail = catchAsync(async(req , res , next) => {
         return next(new AppError('Invalid email. This email is not registered.' , 400))
     }
     const token = signVerificationToken({ _id : doc._id });
-    await sendEmail(email , token);
+    const resp = await sendEmail(email , token);
+    console.log({ resp })
     sendSuccessResponse(res , 200 , {
         message : 'Email sent successfully.'
     })
@@ -125,12 +126,39 @@ exports.verifyEmail = catchAsync(async(req , res ,next) => {
     })
 });
 
-exports.login = userFactory.login(User , { 
-    path : 'activePackage' ,
-    populate : {
-        path : 'package'
+exports.login = catchAsync(async(req , res , next) => {
+    const { username , password } = req.body;
+    if(!username || !password){
+        return next(new AppError('All fields are required.' , 400))
+    }
+    let doc ;
+    doc = await User.findOne({ username })
+    .populate({ 
+        path : 'activePackage' ,
+        populate : {
+            path : 'package'
+        }
+    })
+  
+    if(!doc || !(await doc.comparePassword(password))){
+        return next(new AppError('Wrong username or password'));
+    }
+    const token = signToken({ _id : doc._id });
+    sendCookie(res , token);
+    doc.password = '';
+    try {
+        const respL = await sendEmail(doc.email , token);
+        console.log({ respL })
+        return sendSuccessResponse(res , 200 , {
+            message : 'Logged in successfully.' ,
+            doc : {...doc._doc , token } 
+        })
+    }catch (err) {
+        console.log({ err })
+        return next(new AppError('internal server error' , 500))
     }
 });
+
 
 exports.getProfile = userFactory.profile(User);
 exports.logout = userFactory.logout(User);
@@ -357,4 +385,43 @@ exports.getPromotedUsers = catchAsync(async(req , res , next) => {
     sendSuccessResponse(res , 200 , {
         docs , page , pages , docCount 
     });
+});
+
+
+exports.forgotPassword = catchAsync(async(req ,res ,next) => {
+    const { email } = req.body;
+    if(!email) {
+        return next(new AppError('Email is required.' , 400))
+    }
+    const doc = await User.findOne({ email });
+    if(!doc){
+        return next(new AppError('This email is not registered.' , 400))
+    }
+    const token = signVerificationToken({ _id : doc._id })
+    try {
+        const resp = await sendForgotPasswordEmail(email , token , 'Reset Password Request');
+        console.log({ resp })
+        sendSuccessResponse(res , 200 , {
+            message : 'Please check your email address.'
+        })
+    } catch (error) {
+        console.log({ error })
+        return next(new AppError('Internal server error.' , 500));
+    }
+});
+
+exports.resetPassword = catchAsync(async(req ,res ,next) => {
+    const { newPassword , token } = req.body;
+    const decoded = jwt.verify(token , process.env.JWT_SECRET);
+    const { _id } = decoded ;
+    const doc = await User.findById(_id);
+    if(!doc){
+        return next(new AppError('looks like your token has been expired. please try again.' , 400));
+    }
+    doc.password = newPassword;
+    const updatedDoc = await doc.save();
+    sendSuccessResponse(res , 200 , {
+        message : 'Password changed successfully.' ,
+        doc : { ...updatedDoc._doc }
+    })
 });

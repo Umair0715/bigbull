@@ -42,9 +42,9 @@ const API_KEY = 'RPXHWVY-MTA49ZE-JSHN3PB-4EKH2FR';
 router.post('/', (req , res) => {
     console.log({ body : req.body })
     const paymentData = {
-        "price_amount": 20 ,
+        "price_amount": req.body.depositAmount ,
         "price_currency": "USDTTRC20" ,
-        "pay_amount": 20 ,
+        "pay_amount": req.body.depositAmount ,
         "pay_currency": "USDTTRC20" ,
         "ipn_callback_url": "https://bigbullworld.com:3300/api/payment/done" , 
         "order_id": req.body.packageId ,
