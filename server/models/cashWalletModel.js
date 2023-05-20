@@ -12,7 +12,7 @@ const cashWalletSchema = new mongoose.Schema({
     } ,
     totalBallance : {
         type : Number ,
-        default : 100000 ,
+        default : 0 ,
         min : 0 ,
     } ,
     totalTransfer : {
