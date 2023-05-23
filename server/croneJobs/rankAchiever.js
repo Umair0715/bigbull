@@ -54,7 +54,7 @@ const rankAchiever = async () => {
 
 
 async function calculateTotalSales(members, level) {
-    if (level > 7) return 0;
+    if (level > 100) return 0;
     const levelMembers = await User.find({ referrer: { $in: members.map((m) => m.referralCode) } });
     if (levelMembers.length === 0) return 0;
     const totalSale = levelMembers.reduce((acc, member) => {

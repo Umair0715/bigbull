@@ -335,7 +335,7 @@ exports.getUserRankHistory = catchAsync(async (req, res) => {
     const user = await User.findById(req.user._id);
     const directMembers = await User.find({ referrer: user.referralCode }).limit(100);
   
-    const linesWithTotalSales = await Promise.all(directMembers.filter(m => m.activePackage && m.activePackageType === 1).map(async (directMember , i) => {
+    const linesWithTotalSales = await Promise.all(directMembers.filter(m => m.activePackage ).map(async (directMember , i) => {
         const line = { user: directMember , totalSale: directMember?.activePackage?.depositAmount || 0 , line : i + 1 };
         const teamMembers = await User.find({ referrer: directMember.referralCode });
         if (teamMembers.length > 0) {
@@ -355,7 +355,7 @@ exports.getUserRankHistory = catchAsync(async (req, res) => {
 });
   
 async function calculateTotalSales(members, level) {
-    if (level > 7) return 0;
+    if (level > 100) return 0;
     const levelMembers = await User.find({ referrer: { $in: members.map((m) => m.referralCode) } });
     if (levelMembers.length === 0) return 0;
     const totalSale = levelMembers.reduce((acc, member) => {
