@@ -12,7 +12,7 @@ const createTeamWalletTransaction = async (to , toWallet , from , amount , teamL
         wallet : toWallet._id ,
         amount ,
         teamLevel ,
-        description : `Your team member ${from.name} purchased subscription.` ,
+        description : `Your team member ${from.name} purchased package.` ,
     });
 }
 

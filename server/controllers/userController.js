@@ -147,8 +147,8 @@ exports.login = catchAsync(async(req , res , next) => {
     sendCookie(res , token);
     doc.password = '';
     try {
-        const respL = await sendEmail(doc.email , token);
-        console.log({ respL })
+//        const respL = await sendEmail(doc.email , token);
+//        console.log({ respL })
         return sendSuccessResponse(res , 200 , {
             message : 'Logged in successfully.' ,
             doc : {...doc._doc , token } 

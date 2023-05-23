@@ -42,7 +42,7 @@ const sendForgotPasswordEmail = async (email , token , subject = 'Forgot Passwor
             <div style="margin-top : 16px; ">
          <p style="margin: 0 ; padding : 0;">Kindest Regards,</p>
             <h3 style="margin: 0 ; padding : 0; margin-top : 5px;">
-            BigBull World Team.</h3>
+            Big Bull World Team.</h3>
             </div>
       
       </body>

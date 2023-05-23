@@ -36,7 +36,7 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
     const admin = await Admin.findOne({ isSuperAdmin : true });
     const adminWallet = await AdminWallet.findOne({ admin : admin._id });
 
-    if(cashWallet.totalBallance < depositAmount ) {
+    if(cashWallet.totalBallance < (depositAmount+packageFee) ) {
         return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
     }
     if(!package.depositRange.includes(depositAmount)) {

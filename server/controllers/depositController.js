@@ -4,7 +4,8 @@ const AppError = require('../utils/appError');
 const { sendSuccessResponse } = require('../utils/helpers');
 const uploadImage = require('../utils/uploadImage');
 const createSubscriptionByUsd = require('../utils/createSubsByUsd');
-
+const Subscription = require('../models/subscriptionModel');
+const moment = require('moment');
 exports.createDepositRequest = catchAsync(async(req , res , next) => {
     const { depositAmount , packageId , txId , packageFee , proof } = req.body;
     if(!depositAmount || !packageId || !txId || !packageFee) {
@@ -14,7 +15,23 @@ exports.createDepositRequest = catchAsync(async(req , res , next) => {
         const { fileName } = uploadImage(proof , 'deposits');
         req.body.proof = fileName;
     }
-    const newRequest = await Deposit.create({...req.body , user : req.user._id , package : packageId });
+    
+
+const subscriptionExist = await Subscription.findOne({
+        user : req.user._id ,
+        expireDate : { $gt : Date.now() } ,
+        isActive : true 
+    });
+    var showDepositAmount = depositAmount;
+    if(subscriptionExist){
+        const daysAgo = moment().diff(moment(subscriptionExist.createdAt), 'days');
+        if(daysAgo < 60){
+            showDepositAmount=  depositAmount - subscriptionExist.depositAmount
+        }
+       
+    }
+    
+    const newRequest = await Deposit.create({...req.body , showDepositAmount:showDepositAmount, user : req.user._id , package : packageId });
     sendSuccessResponse(res , 201 , {
         message : "Deposit request created Successfully." ,
         doc : newRequest 
