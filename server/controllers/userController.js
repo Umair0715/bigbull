@@ -284,6 +284,7 @@ exports.updateProfile = catchAsync(async(req , res ) => {
         new : true , 
         runValidators : true 
     });
+    
     sendSuccessResponse(res , 200 , {
         message : 'Profile updated successfully.' ,
         doc : updatedUser
@@ -316,17 +317,31 @@ exports.getSingleUser = catchAsync(async(req , res , next) => {
 });
 
 exports.updateUser = catchAsync(async(req , res ) => {
-    const { image } = req.body;
+    const { image,password } = req.body;
     if(image) {
         const { fileName } = uploadImage(image , 'users');
         req.body.image = fileName;
     }
-    
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId , req.body , {
+    if(password!=''){
+        const user = await User.findById(req.params.userId);
+
+        user.password = password;
+        await user.save();
+    }
+    var data = {
+        name: req.body.name,
+         phone: req.body.phone,
+          address: req.body.address, 
+          country: req.body.country, 
+          gender:req.body.gender,
+          email:req.body.email
+
+      }
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId , data, {
         new : true , 
         runValidators : true 
     });
-    await updatedUser.save();
+    
     sendSuccessResponse(res , 200 , {
         message : 'Profile updated successfully.' ,
         doc : updatedUser
