@@ -32,7 +32,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
     const platformFee = (amount / 100) * settings.platformFee;
 
     if(amount < settings.minimumTransfer){
-        return next(new AppError(`Minimum transfer amount is ${settings.minimumTransfer}` , 400));
+        return next(new AppError(`Minimum transfer amount is $${settings.minimumTransfer}` , 400));
     }
 
     if(toSelf){ // is case me from wallet change hoga (i.e: bullTrack, Roi etc)
