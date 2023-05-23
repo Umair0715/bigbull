@@ -321,10 +321,12 @@ exports.updateUser = catchAsync(async(req , res ) => {
         const { fileName } = uploadImage(image , 'users');
         req.body.image = fileName;
     }
+    
     const updatedUser = await User.findByIdAndUpdate(req.params.userId , req.body , {
         new : true , 
         runValidators : true 
     });
+    await updatedUser.save();
     sendSuccessResponse(res , 200 , {
         message : 'Profile updated successfully.' ,
         doc : updatedUser
