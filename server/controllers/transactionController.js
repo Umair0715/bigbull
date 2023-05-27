@@ -32,7 +32,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
     const platformFee = (amount / 100) * settings.platformFee;
 
     if(amount < settings.minimumTransfer){
-        return next(new AppError(`Minimum transfer amount is ${settings.minimumTransfer}` , 400));
+        return next(new AppError(`Minimum transfer amount is $${settings.minimumTransfer}` , 400));
     }
 
     if(toSelf){ // is case me from wallet change hoga (i.e: bullTrack, Roi etc)
@@ -42,7 +42,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
         const fromWalletModel = getWalletTypeModel(Number(fromWalletType));
         const fromWallet = await fromWalletModel.findOne({ user : req.user._id.toString() });
         if(fromWallet.totalBallance < (amount + platformFee)) {
-            return next(new AppError(`You have insufficient balance in your ${getWalletType(fromWalletType)} wallet to transfer this amount. ` , 400))
+            return next(new AppError(`You have insufficient balance in your ${getWalletType(fromWalletType)} to transfer this amount. ` , 400))
         }
         
         const cashWallet = await CashWallet.findOne({ user : req.user._id });
@@ -62,7 +62,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
             amount , toSelf ,
             description : `Amount received from your ${getWalletName(fromWalletType)} `
         });
-        createWalletHistory(fromWalletType , req.user , fromWallet._id , amountToDetuct , 'Amount transfered to Cash Wallet' )
+        createWalletHistory(fromWalletType , req.user , fromWallet._id , amountToDetuct , 'Amount transferred to Cash Wallet' )
 
         adminWallet.totalBalance += settings.platformFee;
         await adminWallet.save();
@@ -73,7 +73,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
         });
         
         return sendSuccessResponse(res , 200 , {
-            message : 'Payment transfered successfully.' ,
+            message : 'Payment transferred successfully.' ,
             doc : newTransaction
         })
     }else { // is case me from wallet sirf user ka cash wallet hoga
@@ -84,7 +84,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
 
         const amountToDetuct = amount + platformFee;
         if(fromWallet.totalBallance < amountToDetuct){
-            return next(new AppError(`You have insufficient balance in your CashWallet wallet to transfer this amount. ` , 400))
+            return next(new AppError(`You have insufficient balance in your Cash Wallet to transfer this amount. ` , 400))
         }
         fromWallet.totalBallance -= amountToDetuct;
         await fromWallet.save();
@@ -99,7 +99,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
             fromWallet : fromWallet._id ,
             toWallet : toWallet._id ,
             amount , toSelf , 
-            description : `${req.user.username} transfered amount to ${toUser.username}`
+            description : `${req.user.username} transferred amount to ${toUser.username}`
         })
         adminWallet.totalBalance += settings.platformFee;
         await adminWallet.save();
@@ -110,7 +110,7 @@ exports.createTransaction = catchAsync(async(req , res , next) => {
             description : `Transfer fee received from ${req.user.username}`
         })
         return sendSuccessResponse(res , 200 , {
-            message : 'Payment transfered successfully.' ,
+            message : 'Payment transferred successfully.' ,
             doc : newTransaction
         })
     }

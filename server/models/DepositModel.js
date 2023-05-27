@@ -5,6 +5,10 @@ const depositSchema = new mongoose.Schema({
         type : Number ,
         required : [true , 'Deposit Amount is required.']
     } ,
+    showDepositAmount :{
+        type : Number ,
+        required : [true , 'Deposit Amount is required.']
+    },
     package : {
         type : mongoose.Schema.Types.ObjectId ,
         ref : 'Package' ,

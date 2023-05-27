@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-// const DB = 'mongodb://localhost:27017/markaz';
-const DB = process.env.DATABASE_URI;
+const DB = 'mongodb://bigbull:RqUg7$Ba2!20@97.74.92.191:27017/bigbull';
+// const DB = process.env.DATABASE_URI;
 
 const connectDB = () => {
    mongoose.connect(DB , {

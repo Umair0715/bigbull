@@ -36,9 +36,7 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
     const admin = await Admin.findOne({ isSuperAdmin : true });
     const adminWallet = await AdminWallet.findOne({ admin : admin._id });
 
-    if(cashWallet.totalBallance < depositAmount ) {
-        return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
-    }
+   
     if(!package.depositRange.includes(depositAmount)) {
         return next(new AppError('Invalid deposit amount. This amount is not present in this package deposit range.' , 400))
     }
@@ -48,18 +46,33 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
         isActive : true 
     });
     if(subscriptionExist) {
+
         const isPrevSubscription = await Subscription.findOne({
             user : req.user._id ,
             expireDate : { $gt : Date.now() } , 
             package : mongoose.Types.ObjectId(packageId) ,
             depositAmount 
         });
+        const daysAgo = moment().diff(moment(subscriptionExist.createdAt), 'days');
+
         if(isPrevSubscription){
             return next(new AppError('You already deposited amount in this range and package.' , 400))
         }
         if(depositAmount < subscriptionExist.depositAmount ){
             return next(new AppError('You can only upgrade your Package to up level.' , 400))
         }
+        if(daysAgo > 60) {
+            if(cashWallet.totalBallance < (depositAmount+packageFee) ) {
+                return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
+            }
+            amountToDetuct = depositAmount
+        } else {
+            if(cashWallet.totalBallance < ((depositAmount-subscriptionExist.depositAmount)+packageFee) ) {
+                return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
+            }
+            amountToDetuct = depositAmount - subscriptionExist.depositAmount
+        }
+        
         const updatedSubscription = await Subscription.findByIdAndUpdate(subscriptionExist._id , {
             package : package._id ,
             expireDate : moment().add(package.duration, 'months').toDate() ,
@@ -98,7 +111,6 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
         }
 
        
-        const daysAgo = moment().diff(moment(subscriptionExist.createdAt), 'days');
 
         let amountToDetuct = 0;
         if(user.activePackageType === 2){
@@ -152,6 +164,9 @@ exports.createSubscriptionByCashWallet = catchAsync(async(req , res , next) => {
             doc : updatedSubscription
         })
     }else {
+        if(cashWallet.totalBallance < (depositAmount+packageFee) ) {
+            return next(new AppError('You have insufficient balance in your cash Wallet to deposit this amount.' , 400))
+        }
         const newSubscription = await Subscription.create({
             user : mongoose.Types.ObjectId(req.user._id),
             package : package._id ,

@@ -147,8 +147,8 @@ exports.login = catchAsync(async(req , res , next) => {
     sendCookie(res , token);
     doc.password = '';
     try {
-        const respL = await sendEmail(doc.email , token);
-        console.log({ respL })
+//        const respL = await sendEmail(doc.email , token);
+//        console.log({ respL })
         return sendSuccessResponse(res , 200 , {
             message : 'Logged in successfully.' ,
             doc : {...doc._doc , token } 
@@ -283,6 +283,7 @@ exports.updateProfile = catchAsync(async(req , res ) => {
         new : true , 
         runValidators : true 
     });
+    
     sendSuccessResponse(res , 200 , {
         message : 'Profile updated successfully.' ,
         doc : updatedUser
@@ -315,15 +316,31 @@ exports.getSingleUser = catchAsync(async(req , res , next) => {
 });
 
 exports.updateUser = catchAsync(async(req , res ) => {
-    const { image } = req.body;
+    const { image,password } = req.body;
     if(image) {
         const { fileName } = uploadImage(image , 'users');
         req.body.image = fileName;
     }
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId , req.body , {
+    if(password!=''){
+        const user = await User.findById(req.params.userId);
+
+        user.password = password;
+        await user.save();
+    }
+    var data = {
+        name: req.body.name,
+         phone: req.body.phone,
+          address: req.body.address, 
+          country: req.body.country, 
+          gender:req.body.gender,
+          email:req.body.email
+
+      }
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId , data, {
         new : true , 
         runValidators : true 
     });
+    
     sendSuccessResponse(res , 200 , {
         message : 'Profile updated successfully.' ,
         doc : updatedUser
@@ -334,7 +351,7 @@ exports.getUserRankHistory = catchAsync(async (req, res) => {
     const user = await User.findById(req.user._id);
     const directMembers = await User.find({ referrer: user.referralCode }).limit(100);
   
-    const linesWithTotalSales = await Promise.all(directMembers.filter(m => m.activePackage && m.activePackageType === 1).map(async (directMember , i) => {
+    const linesWithTotalSales = await Promise.all(directMembers.filter(m => m.activePackage ).map(async (directMember , i) => {
         const line = { user: directMember , totalSale: directMember?.activePackage?.depositAmount || 0 , line : i + 1 };
         const teamMembers = await User.find({ referrer: directMember.referralCode });
         if (teamMembers.length > 0) {
@@ -354,7 +371,7 @@ exports.getUserRankHistory = catchAsync(async (req, res) => {
 });
   
 async function calculateTotalSales(members, level) {
-    if (level > 7) return 0;
+    if (level > 100) return 0;
     const levelMembers = await User.find({ referrer: { $in: members.map((m) => m.referralCode) } });
     if (levelMembers.length === 0) return 0;
     const totalSale = levelMembers.reduce((acc, member) => {
@@ -424,6 +441,7 @@ exports.resetPassword = catchAsync(async(req ,res ,next) => {
         doc : { ...updatedDoc._doc }
     })
 });
+<<<<<<< HEAD
 
 exports.searchSingleUser = catchAsync(async(req ,res , next ) => {
     const keyword = req.query.keyword;
@@ -436,3 +454,5 @@ exports.searchSingleUser = catchAsync(async(req ,res , next ) => {
     }
     sendSuccessResponse(res , 200 , { doc : user })
 })
+=======
+>>>>>>> origin/main

@@ -14,6 +14,8 @@ const https = require('https');
 const fs = require('fs');
 
 
+
+
 const cron = require('node-cron');
 const rankAchiever = require('./croneJobs/rankAchiever');
 
@@ -55,16 +57,19 @@ app.use('/api/deposit-history' , require('./routes/depositHistoryRoutes'));
 app.use('/api/payment' , require('./routes/paymentRoutes'));
 app.use('/api/rank' , require('./routes/rankRoutes'));
 app.use('/api/achieved-rank' , require('./routes/achievedRankRoutes'));
+
 app.use('/api/deposit-request' , require('./routes/depositRoutes'))
 
 app.use(require('./middlewares/errorHandler'));
 
 const options = {
-    key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
-    cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
+  key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
+  cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
 };
 
 const server = https.createServer(options, app);
+
+
 
 const PORT = process.env.PORT || 3300;
 server.listen(PORT , () => console.log(`server is listening on port ${PORT}`))
