@@ -159,7 +159,6 @@ exports.login = catchAsync(async(req , res , next) => {
     }
 });
 
-
 exports.getProfile = userFactory.profile(User);
 exports.logout = userFactory.logout(User);
 
@@ -425,3 +424,15 @@ exports.resetPassword = catchAsync(async(req ,res ,next) => {
         doc : { ...updatedDoc._doc }
     })
 });
+
+exports.searchSingleUser = catchAsync(async(req ,res , next ) => {
+    const keyword = req.query.keyword;
+    if(keyword === req.user.username) {
+        return next(new AppError('You cannot transfer to yourself.' , 400))
+    }
+    const user = await User.findOne({ username : keyword });
+    if(!user) {
+        return next(new AppError('Invalid username. User not found.' , 400))
+    }
+    sendSuccessResponse(res , 200 , { doc : user })
+})
