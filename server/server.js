@@ -64,13 +64,13 @@ app.use('/api/deposit-request' , require('./routes/depositRoutes'));
 
 app.use(require('./middlewares/errorHandler'));
 
-// const options = {
-//   key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
-//   cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
-// };
+const options = {
+  key: fs.readFileSync('bigbullworld.key', 'utf8').trim(),
+  cert: fs.readFileSync('bigbullworld.crt', 'utf8').trim()
+};
 
-// const httpServer = https.createServer(options, app);
-const httpServer = http.createServer(app);
+const httpServer = https.createServer(options, app);
+// const httpServer = http.createServer(app);
 const { Server } = require('socket.io');
 
 const io = new Server(httpServer , {
