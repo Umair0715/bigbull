@@ -441,7 +441,6 @@ exports.resetPassword = catchAsync(async(req ,res ,next) => {
         doc : { ...updatedDoc._doc }
     })
 });
-<<<<<<< HEAD
 
 exports.searchSingleUser = catchAsync(async(req ,res , next ) => {
     const keyword = req.query.keyword;
@@ -454,5 +453,3 @@ exports.searchSingleUser = catchAsync(async(req ,res , next ) => {
     }
     sendSuccessResponse(res , 200 , { doc : user })
 })
-=======
->>>>>>> origin/main
